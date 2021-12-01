@@ -1,0 +1,37 @@
+version: '3.4'
+services:
+  mariadb:
+    image: mariadb:latest
+    environment:
+      - MYSQL_DATABASE=passbolt
+      - MYSQL_USER=passbolt
+      - MYSQL_PASSWORD=${MARIADB_USER_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - ./mariadb_data:/var/lib/mysql
+  passbolt:
+    image: passbolt/passbolt:latest-ce
+    tty: true
+    depends_on:
+      - mariadb
+    environment:
+      - DATASOURCES_DEFAULT_HOST=mariadb
+      - DATASOURCES_DEFAULT_USERNAME=passbolt
+      - DATASOURCES_DEFAULT_PASSWORD=${MARIADB_USER_PASSWORD}
+      - DATASOURCES_DEFAULT_DATABASE=passbolt
+      - DATASOURCES_DEFAULT_PORT=3306
+      - DATASOURCES_QUOTE_IDENTIFIER=true
+      - APP_FULL_BASE_URL=https://passbolt.packop.dev
+      - EMAIL_DEFAULT_FROM=passbolt@mydomain.com
+      - EMAIL_TRANSPORT_DEFAULT_HOST=smtp.mydomain.com
+      - EMAIL_TRANSPORT_DEFAULT_PORT=587
+      - EMAIL_TRANSPORT_DEFAULT_USERNAME=passbolt@packop.dev
+      - EMAIL_TRANSPORT_DEFAULT_PASSWORD=ASDxzcxc0Aice8Na0aphoyoh
+      - EMAIL_TRANSPORT_DEFAULT_TLS=true
+      - PASSBOLT_KEY_EMAIL=passbolt@mydomain.com
+    volumes:
+      - ./passbolt_gpg:/etc/passbolt/gpg
+      - ./passbolt_web:/usr/share/php/passbolt/webroot/img/public
+    command: ["/usr/bin/wait-for.sh", "-t", "0", "mariadb:3306", "--", "/docker-entrypoint.sh"]
+    ports:
+      - 80:80
